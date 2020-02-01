@@ -2,6 +2,34 @@
 CHANGELOG
 =========
 
+1.4.8
+=====
+* improvement: Added support for subscription acknowledgement callbacks while offline or resubscribing
+  
+1.4.7
+=====
+* improvement: Added connection establishment control through client socket factory option
+
+1.4.6
+=====
+* bugfix: Use non-deprecated ssl API to specify ALPN when doing Greengrass discovery 
+
+1.4.5
+=====
+* improvement: Added validation to mTLS arguments in basicDiscovery
+
+1.4.3
+=====
+* bugfix: [Issue #150](https://github.com/aws/aws-iot-device-sdk-python/issues/150)Fix for ALPN in Python 3.7
+
+1.4.2
+=====
+* bugfix: Websocket handshake supports Amazon Trust Store (ats) endpoints
+* bugfix: Remove default port number in samples, which prevented WebSocket mode from using 443
+* bugfix: jobsSample print statements compatible with Python 3.x
+* improvement: Small fixes to IoT Jobs documentation
+
+
 1.4.0
 =====
 * bugfix:Issue `#136 <https://github.com/aws/aws-iot-device-sdk-python/issues/136>`

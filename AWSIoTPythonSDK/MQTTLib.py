@@ -408,6 +408,33 @@ class AWSIoTMQTTClient:
         """
         self._mqtt_core.configure_username_password(username, password)
 
+    def configureSocketFactory(self, socket_factory):
+        """
+        **Description**
+
+        Configure a socket factory to custom configure a different socket type for
+        mqtt connection. Creating a custom socket allows for configuration of a proxy
+
+        **Syntax**
+
+        .. code:: python
+
+          # Configure socket factory
+          custom_args = {"arg1": "val1", "arg2": "val2"}
+          socket_factory = lambda: custom.create_connection((host, port), **custom_args)
+          myAWSIoTMQTTClient.configureSocketFactory(socket_factory)
+
+        **Parameters**
+
+        *socket_factory* - Anonymous function which creates a custom socket to spec.
+
+        **Returns**
+
+        None
+
+        """
+        self._mqtt_core.configure_socket_factory(socket_factory)
+        
     def enableMetricsCollection(self):
         """
         **Description**
@@ -473,7 +500,8 @@ class AWSIoTMQTTClient:
 
         **Parameters**
 
-        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request. 
+        *keepAliveIntervalSecond* - Time in seconds for interval of sending MQTT ping request.
+        A shorter keep-alive interval allows the client to detect disconnects more quickly.
         Default set to 600 seconds.
 
         **Returns**
@@ -1133,6 +1161,33 @@ class _AWSIoTMQTTDelegatingClient(object):
         """
         self._AWSIoTMQTTClient.configureUsernamePassword(username, password)
 
+    def configureSocketFactory(self, socket_factory):
+        """
+        **Description**
+
+        Configure a socket factory to custom configure a different socket type for
+        mqtt connection. Creating a custom socket allows for configuration of a proxy
+
+        **Syntax**
+
+        .. code:: python
+
+          # Configure socket factory
+          custom_args = {"arg1": "val1", "arg2": "val2"}
+          socket_factory = lambda: custom.create_connection((host, port), **custom_args)
+          myAWSIoTMQTTClient.configureSocketFactory(socket_factory)
+
+        **Parameters**
+
+        *socket_factory* - Anonymous function which creates a custom socket to spec.
+
+        **Returns**
+
+        None
+
+        """
+        self._AWSIoTMQTTClient.configureSocketFactory(socket_factory)
+        
     def enableMetricsCollection(self):
         """
         **Description**
@@ -1498,13 +1553,14 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Subscribe to notify-next topic to monitor change in job referred to by $next
           myAWSIoTMQTTJobsClient.createJobSubscription(callback, jobExecutionTopicType.JOB_NOTIFY_NEXT_TOPIC)
           #Subscribe to notify topic to monitor changes to jobs in pending list
           myAWSIoTMQTTJobsClient.createJobSubscription(callback, jobExecutionTopicType.JOB_NOTIFY_TOPIC)
-          #Subscribe to recieve messages for job execution updates
+          #Subscribe to receive messages for job execution updates
           myAWSIoTMQTTJobsClient.createJobSubscription(callback, jobExecutionTopicType.JOB_UPDATE_TOPIC, jobExecutionTopicReplyType.JOB_ACCEPTED_REPLY_TYPE)
-          #Subscribe to recieve messages for describing a job execution
+          #Subscribe to receive messages for describing a job execution
           myAWSIoTMQTTJobsClient.createJobSubscription(callback, jobExecutionTopicType.JOB_DESCRIBE_TOPIC, jobExecutionTopicReplyType.JOB_ACCEPTED_REPLY_TYPE, jobId)
 
         **Parameters**
@@ -1541,13 +1597,14 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Subscribe to notify-next topic to monitor change in job referred to by $next
           myAWSIoTMQTTJobsClient.createJobSubscriptionAsync(callback, jobExecutionTopicType.JOB_NOTIFY_NEXT_TOPIC)
           #Subscribe to notify topic to monitor changes to jobs in pending list
           myAWSIoTMQTTJobsClient.createJobSubscriptionAsync(callback, jobExecutionTopicType.JOB_NOTIFY_TOPIC)
-          #Subscribe to recieve messages for job execution updates
+          #Subscribe to receive messages for job execution updates
           myAWSIoTMQTTJobsClient.createJobSubscriptionAsync(callback, jobExecutionTopicType.JOB_UPDATE_TOPIC, jobExecutionTopicReplyType.JOB_ACCEPTED_REPLY_TYPE)
-          #Subscribe to recieve messages for describing a job execution
+          #Subscribe to receive messages for describing a job execution
           myAWSIoTMQTTJobsClient.createJobSubscriptionAsync(callback, jobExecutionTopicType.JOB_DESCRIBE_TOPIC, jobExecutionTopicReplyType.JOB_ACCEPTED_REPLY_TYPE, jobId)
 
         **Parameters**
@@ -1588,6 +1645,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #send a request to describe the next job
           myAWSIoTMQTTJobsClient.sendJobsQuery(jobExecutionTopicType.JOB_DESCRIBE_TOPIC, '$next')
           #send a request to get list of pending jobs
@@ -1609,7 +1667,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         payload = self._thingJobManager.serializeClientTokenPayload()
         return self._AWSIoTMQTTClient.publish(topic, payload, self._QoS)
 
-    def sendJobsStartNext(self, statusDetails=None):
+    def sendJobsStartNext(self, statusDetails=None, stepTimeoutInMinutes=None):
         """
         **Description**
 
@@ -1619,6 +1677,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Start next job (set status to IN_PROGRESS) and update with optional statusDetails
           myAWSIoTMQTTJobsClient.sendJobsStartNext({'StartedBy': 'myClientId'})
 
@@ -1626,16 +1685,18 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
 
         *statusDetails* - Dictionary containing the key value pairs to use for the status details of the job execution
 
+        *stepTimeoutInMinutes - Specifies the amount of time this device has to finish execution of this job. 
+
         **Returns**
 
         True if the publish request has been sent to paho. False if the request did not reach paho.
 
         """
         topic = self._thingJobManager.getJobTopic(jobExecutionTopicType.JOB_START_NEXT_TOPIC, jobExecutionTopicReplyType.JOB_REQUEST_TYPE)
-        payload = self._thingJobManager.serializeStartNextPendingJobExecutionPayload(statusDetails)
+        payload = self._thingJobManager.serializeStartNextPendingJobExecutionPayload(statusDetails, stepTimeoutInMinutes)
         return self._AWSIoTMQTTClient.publish(topic, payload, self._QoS)
 
-    def sendJobsUpdate(self, jobId, status, statusDetails=None, expectedVersion=0, executionNumber=0, includeJobExecutionState=False, includeJobDocument=False):
+    def sendJobsUpdate(self, jobId, status, statusDetails=None, expectedVersion=0, executionNumber=0, includeJobExecutionState=False, includeJobDocument=False, stepTimeoutInMinutes=None):
         """
         **Description**
 
@@ -1645,6 +1706,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Update job with id 'jobId123' to succeeded state, specifying new status details, with expectedVersion=1, executionNumber=2.
           #For the response, include job execution state and not the job document
           myAWSIoTMQTTJobsClient.sendJobsUpdate('jobId123', jobExecutionStatus.JOB_EXECUTION_SUCCEEDED, statusDetailsMap, 1, 2, True, False)
@@ -1670,7 +1732,9 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
 
         *includeJobExecutionState* - When included and set to True, the response contains the JobExecutionState field. The default is False.
 
-        *includeJobDocument - When included and set to True, the response contains the JobDocument. The default is False.
+        *includeJobDocument* - When included and set to True, the response contains the JobDocument. The default is False.
+
+        *stepTimeoutInMinutes - Specifies the amount of time this device has to finish execution of this job. 
 
         **Returns**
 
@@ -1678,7 +1742,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
 
         """
         topic = self._thingJobManager.getJobTopic(jobExecutionTopicType.JOB_UPDATE_TOPIC, jobExecutionTopicReplyType.JOB_REQUEST_TYPE, jobId)
-        payload = self._thingJobManager.serializeJobExecutionUpdatePayload(status, statusDetails, expectedVersion, executionNumber, includeJobExecutionState, includeJobDocument)
+        payload = self._thingJobManager.serializeJobExecutionUpdatePayload(status, statusDetails, expectedVersion, executionNumber, includeJobExecutionState, includeJobDocument, stepTimeoutInMinutes)
         return self._AWSIoTMQTTClient.publish(topic, payload, self._QoS)
 
     def sendJobsDescribe(self, jobId, executionNumber=0, includeJobDocument=True):
@@ -1690,6 +1754,7 @@ class AWSIoTMQTTThingJobsClient(_AWSIoTMQTTDelegatingClient):
         **Syntax**
 
         .. code:: python
+
           #Describe job with id 'jobId1' of any executionNumber, job document will be included in response
           myAWSIoTMQTTJobsClient.sendJobsDescribe('jobId1')
 
